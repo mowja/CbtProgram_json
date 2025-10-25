@@ -1,50 +1,207 @@
-CBT Parser & Quiz App (Tkinter)
+# CBT 파서 & 퀴즈 앱 (Tkinter)
 
-Overview
-- Lightweight CBT practice app using Python + Tkinter.
-- Loads question banks from JSON files you provide (not included in this repo).
-- Works as a module (`python -m app.main`) or a bundled Windows exe via PyInstaller.
+## 개요
 
-Folder Layout
-- Code: `app/`
-- Question banks (user-provided): `app/Quiz_Set/` (ignored by git)
+* Python + Tkinter 기반의 가벼운 CBT(자격시험) 연습용 앱입니다.
+* 사용자가 제공한 문제은행(JSON)을 로드해서 모의시험을 볼 수 있습니다. (이 레포지토리에는 문제 데이터 포함 안 됨)
+* `python -m app.main` 으로 모듈 형태로 실행하거나, PyInstaller 로 Windows용 단일 exe로 빌드할 수 있습니다.
 
-Run (no data bundled)
-1) Create your own question set(s) under `app/Quiz_Set/` as described below.
-2) From the repo root: `python -m app.main`
+## 폴더 구조
 
-Question Bank Format
-- Place one or more JSON files under `app/Quiz_Set/`.
-- Filename pattern is flexible (e.g., `Q1~Q100.json`, `Q101~Q200.json`), the app loads all files matching `Q*~Q*.json`.
-- Each file contains a list of question objects. Required and optional fields are:
+* 코드: `app/`
+* 문제 JSON 파일(사용자 데이터): `app/Quiz_Set/`
+  (이 폴더는 git에 포함시키지 않는 걸 권장합니다)
 
-```
+## 실행 방법 (데이터는 직접 넣어야 함)
+
+1. 아래 "문제은행 포맷"에 맞춰서 JSON 파일들을 `app/Quiz_Set/` 안에 넣습니다.
+2. 프로젝트 루트(최상위 폴더)에서 아래 명령으로 실행합니다:
+
+   ```powershell
+   python -m app.main
+   ```
+
+> 실행 후에는 GUI 시험 화면이 열리며,
+>
+> * 타이머(예: 100분) 카운트다운
+> * 문제/보기 선택 (복수정답도 지원)
+> * 마크(★) 표시
+> * 설명 미리보기 창 (정답 + 해설)
+> * 제출 후 검토 화면(맞은 개수, 합불 여부, 응시 시간, 각 문항 해설)
+>   기능이 동작합니다.
+
+---
+
+## 문제은행(JSON) 포맷
+
+`app/Quiz_Set/` 폴더에 한 개 이상 JSON 파일을 둡니다.
+
+* 파일 이름은 자유지만 관례적으로 `Q1~Q100.json`, `Q101~Q200.json` 이런 식으로 쓰고 있습니다.
+* 앱은 `Q*~Q*.json` 패턴에 맞는 모든 JSON 파일을 로드하여 하나의 문제은행으로 합칩니다.
+* 각 JSON 파일은 "문항 객체"들의 리스트입니다. 문항 구조는 아래와 같습니다:
+
+```json
 [
   {
-    "id": 101,                 // unique per question (string or number)
-    "title": "Question title", // optional; shown above the context
-    "context": "Full question text.",
-    "choices": [               // 2–26 choices, ordered; labeled A, B, C ...
-      "Option A",
-      "Option B",
-      "Option C",
-      "Option D"
+    "id": 101,                       // 문제 ID (문제마다 고유. 문자열/숫자 모두 허용)
+    "title": "문제 제목(선택)",        // 선택 필드. 있으면 지문 위에 굵게 표시됨
+    "context": "문제 전체 지문 텍스트",
+    "choices": [                     // 선택지 배열 (2~26개). A, B, C ... 순서대로 매핑됨
+      "옵션 A 내용",
+      "옵션 B 내용",
+      "옵션 C 내용",
+      "옵션 D 내용"
     ],
-    "answers": ["B", "D"],     // correct answers by letter; single- or multi-select
-    "explain": "Why the answer is correct.", // optional
-    "link": "https://docs.example.com/..."   // optional; click opens in browser
+    "answers": ["B", "D"],          // 정답. 보기의 레터(A,B,C,...)로 표기. 단일 정답이면 ["C"] 처럼 1개만
+    "explain": "왜 이 답이 맞는지에 대한 해설",   // 선택 필드. 검토 화면 및 설명 미리보기 창에 노출
+    "link": "https://..."           // 선택 필드. 참고용 URL. (검토 화면에서는 더 이상 자동으로 열지 않음)
   }
 ]
 ```
 
-Notes
-- `answers` must reference labels by letter (e.g., `"A"`, `"C"`). For single-answer questions, use a one-element list (e.g., `["C"]`).
-- Up to 26 choices are supported (A–Z).
-- The app samples `NUM_QUESTIONS` from the combined bank. You can change this in `app/config.py`.
+### 필드 설명
 
-Build a Windows EXE (optional)
-- Requires PyInstaller: `pip install pyinstaller`
-- One-file, no-console build with icon and data mapping:
+* `id` : 시험 내에서 고유하게 식별 가능한 번호.
+* `title` : (있을 수도, 없을 수도) 간단한 요약/문제 타이틀.
+* `context` : 실제 문제 본문. 여러 줄 지원.
+* `choices` : 보기 텍스트 배열. 최대 26개까지 지원 (A~Z). 보기 길이에 따라 자동 줄바꿈.
+* `answers` : 정답 인덱스가 아니라 문자 레터로 넣어야 함. 예) `"A"`, `"C"`, 복수 정답은 `["A","D"]`.
+* `explain` : 해설 텍스트. 제출 후 검토 화면, "설명 미리보기" 팝업에서 함께 보여줌. 정답 보기 텍스트까지 같이 출력.
+* `link` : 참고용 외부 링크. 단순히 문자열로만 표시 (자동 클릭/자동 오픈 강제 안 함).
+
+### 동작 특징
+
+* 문제은행의 모든 JSON을 합쳐서 하나의 풀(pool)로 만든 뒤, 설정된 개수(`NUM_QUESTIONS`)만큼 랜덤 샘플링해서 시험 1세트를 구성합니다.
+* `NUM_QUESTIONS` 등 시험 옵션은 `app/config.py` 에서 조정 가능합니다. (예: 65문제 시험)
+* 복수 정답 문제의 경우, 사용자가 1개만 체크하고 넘어가려고 하면 경고를 띄우고 다음 문제로 못 넘어가게 막습니다.
+* 마크(★)한 문제는 "검토 화면" 왼쪽 문제 리스트에서 노란색 글자로 구분됩니다.
+* 틀린 문제는 빨간색 배경으로 표시됩니다.
+* 제출 후 뜨는 "검토 화면"에서는:
+
+  * 맞힌 개수 / 합격 여부(52 이상 합격권, 55 이상 안정권, 58 이상 퍼펙토)
+  * 실제 응시 시간 (100분 기준 카운트다운에서 사용한 시간 계산)
+  * 각 문항별로 정답(A. 텍스트…), 내가 제출한 답(B. 텍스트…), 해설을 한 번에 확인 가능
+  * 좌측 번호 목록에서 틀린 문제는 빨간 배경, 마크한 문제는 노란 글씨로 강조
+  * "종료" 버튼을 누르면 검토 창과 시험 메인 창이 동시에 종료됩니다.
+* 동일 세션에서 제출을 여러 번 눌러도 검토 창은 1개만 유지됩니다. 이미 열려 있다면 이전 창을 닫고 새 창으로 교체합니다.
+
+---
+
+## 설정(예: 시험 길이, 합격 기준 등)
+
+이 값들은 `app/config.py` 에 정의되어 있습니다. 대표적으로:
+
+* `NUM_QUESTIONS` : 한 번에 출제할 문제 수 (예: 65)
+* `DEFAULT_TIMER_MIN` : 타이머 시작 시간(분) (예: 100)
+* `PASS_CUTOFF`, `SAFE_CUTOFF`, `PERF_CUTOFF` : 점수대별 메시지(예: 합격권/안정권/퍼펙토)
+* `JSON_DIR` : 문제 JSON을 읽는 폴더 경로. 기본은 `app/Quiz_Set`
+
+원하면 여기 숫자들만 바꿔서 다른 시험 스타일(예: 40문제 60분)로 쉽게 만들 수 있습니다.
+
+---
+
+## Windows용 exe 빌드 (선택)
+
+이 앱은 Tkinter GUI라 바로 PyInstaller로 하나의 실행 파일(.exe)로 묶을 수 있습니다.
+
+사전 준비:
+
+```powershell
+pip install pyinstaller
+```
+
+기본 빌드 예시:
+
+```powershell
+pyinstaller --onefile --windowed --name CBT_Quiz `
+  --icon AWS-SAA-C03.ico `
+  --add-data "app/Quiz_Set;app/Quiz_Set" `
+  app/main.py
+```
+
+* `--onefile` : 실행 파일 1개로 합침
+* `--windowed` : 콘솔 창 없이 GUI만 띄움
+* `--add-data` : 실행 시 내부에서도 `app/Quiz_Set` 폴더를 참조할 수 있도록 포함
+* `--icon` : (선택) 아이콘 파일 지정
+* `--name` : exe 파일 이름 (예: CBT_Quiz.exe)
+* 빌드 후 실행 파일은 `dist/` 폴더에 생성됩니다.
+
+버전을 나눠서 배포하고 싶다면 `--name CBT_Quiz_v2`, `--name CBT_Quiz_v3` 처럼 이름만 바꿔서 여러 빌드를 뽑을 수도 있습니다. PyInstaller `.spec` 파일을 별도로 관리하는 방식도 가능합니다.
+
+> 주의: 빌드할 때 `app/Quiz_Set` 안에 네가 실제로 쓰는 문제 JSON들이 있어야 그 데이터도 exe에 같이 묶입니다. 그렇지 않으면 exe만 배포하고 JSON은 따로 폴더째 줘야 합니다.
+
+---
+
+## 왜 `app/Quiz_Set/`은 비워서 배포하나?
+
+* 실제 문제 데이터(덤프 등)는 저작권/약관 이슈가 있을 수 있습니다.
+* 이 레포는 **코드만** 제공하고, 문제 내용은 사용자가 직접 준비한 JSON을 넣는 구조입니다.
+* 즉 배포본에는 `app/Quiz_Set/` 폴더만 빈 채로 제공하고, 실제 JSON은 개인적으로만 관리하세요.
+
+---
+
+## 라이선스 / 책임
+
+* 이 코드는 학습/연습용으로 제공됩니다. 문제 콘텐츠(문제 text, 해설 등)는 당신이 별도로 관리하며, 그 사용 책임은 전적으로 본인에게 있습니다.
+* 실제 시험 정책/비밀유지 계약(NDA) 등을 위반하는 데이터는 사용하거나 배포하지 마세요.
+CBT 파서 & 퀴즈 앱 (Tkinter)
+
+개요
+- Python + Tkinter 로 만든 가벼운 CBT 연습용 앱입니다.
+- 사용자가 제공한 JSON 문제은행을 로드하여 실행합니다(본 저장소에는 문제 JSON을 포함하지 않습니다).
+- 모듈 실행(`python -m app.main`) 또는 PyInstaller 로 Windows 단일 실행 파일로 빌드할 수 있습니다.
+
+폴더 구조
+- 코드: `app/`
+- 문제 파일(사용자 제공): `app/Quiz_Set/` (git에 포함되지 않도록 제외됨)
+- 샘플: `samples/Quiz_Set/Q_SAMPLE.json`
+
+실행 방법(문제 데이터 별도)
+1) 아래 JSON 형식에 맞춰 `app/Quiz_Set/` 폴더에 파일을 생성합니다.
+2) 저장소 루트에서 실행: `python -m app.main`
+
+빠른 시작(샘플 사용)
+- `samples/Quiz_Set/Q_SAMPLE.json`을 `app/Quiz_Set/Q1~Q100.json` 등(패턴 `Q*~Q*.json`)으로 복사합니다.
+- 해당 파일을 열어 동일한 구조로 문제를 추가/수정합니다.
+
+문제 JSON 형식
+- `app/Quiz_Set/` 아래에 1개 이상 JSON 파일을 두면 됩니다.
+- 파일명은 자유지만 로더는 `Q*~Q*.json` 패턴을 불러옵니다(예: `Q1~Q100.json`, `Q101~Q200.json`).
+- 각 파일은 문제 객체(list)를 담습니다. 필드 설명은 아래와 같습니다.
+
+```
+[
+  {
+    "id": 1,                     // 문제 고유 ID(문자/숫자 모두 가능)
+    "group": "part1",            // 선택값, 그룹/파트 구분용
+    "title": "전제",              // 선택값; 본문 위에 표시되는 간단 제목
+    "context": "문제",             // 문제 본문 텍스트
+    "choices": [                  // 보기 2–26개, 순서 중요; A, B, C ... 라벨링됨
+      "보기 1번",
+      "보기 2번",
+      "보기 3번",
+      "보기 4번"
+    ],
+    "answers": ["A"],             // 정답 라벨 리스트(단일/복수 정답 모두 리스트로 표기)
+    "link": "버튼클릭시 이동할 링크", // 선택값; 클릭 시 브라우저 열림
+    "links": [                    // 선택값; 참고 링크 후보군
+      "링크 후보군 1번",
+      "링크 후보군 2번"
+    ],
+    "explain": "설명 자리"          // 선택값; 해설 텍스트
+  }
+]
+```
+
+주의 사항
+- `answers` 값은 보기의 문자 라벨을 사용합니다(예: `"A"`, `"C"`).
+- 단일 정답도 리스트로 표기합니다(예: `["C"]`).
+- 보기 최대 26개(A–Z)까지 지원합니다.
+- 전체 문제 중 `NUM_QUESTIONS`개를 샘플링하여 출제합니다. 값은 `app/config.py`에서 변경할 수 있습니다.
+
+Windows 실행 파일 빌드(선택)
+- PyInstaller 필요: `pip install pyinstaller`
+- 아이콘/데이터 포함 단일 파일 빌드 예시:
 
 ```
 pyinstaller --onefile --windowed --name CBT_Quiz \
@@ -53,13 +210,13 @@ pyinstaller --onefile --windowed --name CBT_Quiz \
   app/main.py
 ```
 
-- The produced executable will be in `dist/`.
-- For variant builds (e.g., v2/v3/v4), update `--name` accordingly or use the provided `.spec` files (if included locally).
+- 결과 실행 파일은 `dist/` 폴더에 생성됩니다.
+- v2/v3/v4 등 변형 빌드는 `--name`만 바꾸거나(예: `--name CBT_Quiz_v3`) 제공된 `.spec` 파일을 사용하세요.
 
-Why `app/Quiz_Set/` is empty here
-- The question files are not distributed to avoid copyright issues.
-- Add your own JSON files in that folder following the format above.
+왜 `app/Quiz_Set/` 폴더가 비어있나요?
+- 저작권 문제로 문제 JSON은 배포하지 않습니다.
+- 위 형식에 맞춰 각자 보유한 데이터로 JSON을 만들어 `app/Quiz_Set/`에 추가해 사용하세요.
 
-License
-- Code in this repository is provided without bundled question content. Ensure you have the right to use any question data you add.
-
+라이선스 / 유의
+- 본 저장소에는 코드만 포함되며, 질문 콘텐츠는 포함되지 않습니다.
+- 추가하는 문제 데이터에 대한 저작권과 사용 권한을 확인하세요.
