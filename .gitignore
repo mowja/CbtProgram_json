@@ -1,0 +1,22 @@
+# Virtual environments
+AWScbt/
+
+# Local data and generated content
+app/Quiz_Set/
+app/Quiz_set/
+Que/
+Que_v2/
+Que_v3/
+Que(backup)/
+input/
+output/
+
+# Build artifacts
+build/
+dist/
+*.spec
+
+# Python caches
+__pycache__/
+*.pyc
+
